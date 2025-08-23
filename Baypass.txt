@@ -20,6 +20,7 @@ local textColor = Color3.fromRGB(255, 255, 255)
 local hoverColor = Color3.fromRGB(0, 100, 190)
 local closeColor = Color3.fromRGB(200, 50, 50)
 local minimizeColor = Color3.fromRGB(255, 180, 0)
+local errorColor = Color3.fromRGB(200, 50, 50) -- Красный цвет для ошибок
 
 -- Главное окно
 local MainFrame = Instance.new("Frame")
@@ -203,8 +204,15 @@ local NotificationCorner = Instance.new("UICorner")
 NotificationCorner.CornerRadius = UDim.new(0, 8)
 NotificationCorner.Parent = Notification
 
--- Функция для показа уведомления
-local function showNotification()
+-- Функция для показа уведомления с возможностью изменения текста и цвета
+local function showNotification(text, color)
+    if color then
+        Notification.BackgroundColor3 = color
+    else
+        Notification.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    end
+    
+    Notification.Text = text
     Notification.Visible = true
     Notification.Position = UDim2.new(0.5, -150, 0, -50)
     
@@ -234,8 +242,8 @@ end
 
 -- Фрейм для настроек
 local SettingsFrame = Instance.new("Frame")
-SettingsFrame.Size = UDim2.new(0, 320, 0, 200)
-SettingsFrame.Position = UDim2.new(0.5, -160, 0.3, -100)
+SettingsFrame.Size = UDim2.new(0, 320, 0, 250)
+SettingsFrame.Position = UDim2.new(0.5, -160, 0.3, -125)
 SettingsFrame.BackgroundColor3 = backgroundColor
 SettingsFrame.BackgroundTransparency = 0.2
 SettingsFrame.BorderSizePixel = 0
@@ -267,7 +275,7 @@ SettingsTitle.Parent = SettingsFrame
 
 local V1Button = Instance.new("TextButton")
 V1Button.Size = UDim2.new(0.9, 0, 0, 40)
-V1Button.Position = UDim2.new(0.05, 0, 0.25, 0)
+V1Button.Position = UDim2.new(0.05, 0, 0.2, 0)
 V1Button.BackgroundColor3 = accentColor
 V1Button.TextColor3 = textColor
 V1Button.Font = Enum.Font.GothamBold
@@ -281,7 +289,7 @@ V1Corner.Parent = V1Button
 
 local V2Button = Instance.new("TextButton")
 V2Button.Size = UDim2.new(0.9, 0, 0, 40)
-V2Button.Position = UDim2.new(0.05, 0, 0.6, 0)
+V2Button.Position = UDim2.new(0.05, 0, 0.4, 0)
 V2Button.BackgroundColor3 = accentColor
 V2Button.TextColor3 = textColor
 V2Button.Font = Enum.Font.GothamBold
@@ -292,6 +300,21 @@ V2Button.Parent = SettingsFrame
 local V2Corner = Instance.new("UICorner")
 V2Corner.CornerRadius = UDim.new(0, 8)
 V2Corner.Parent = V2Button
+
+-- Добавляем кнопку V3
+local V3Button = Instance.new("TextButton")
+V3Button.Size = UDim2.new(0.9, 0, 0, 40)
+V3Button.Position = UDim2.new(0.05, 0, 0.6, 0)
+V3Button.BackgroundColor3 = accentColor
+V3Button.TextColor3 = textColor
+V3Button.Font = Enum.Font.GothamBold
+V3Button.TextSize = 14
+V3Button.Text = "V3 - Kazakh Bypass"
+V3Button.Parent = SettingsFrame
+
+local V3Corner = Instance.new("UICorner")
+V3Corner.CornerRadius = UDim.new(0, 8)
+V3Corner.Parent = V3Button
 
 -- Функция замены символов (ИСПРАВЛЕННАЯ с использованием string.char)
 local function bypassFilter(text)
@@ -407,6 +430,50 @@ local function replaceLetters(str)
     return str
 end
 
+-- Новая функция замены на казахстанские символы (похожие на русские)
+local function kazakhReplace(str)
+    local kazakhMap = {
+        ["а"] = "ә", ["А"] = "Ә",
+        ["б"] = "б", ["Б"] = "Б",
+        ["в"] = "в", ["В"] = "В",
+        ["г"] = "ғ", ["Г"] = "Ғ",
+        ["д"] = "д", ["Д"] = "Д",
+        ["е"] = "е", ["Е"] = "Е",
+        ["ё"] = "ё", ["Ё"] = "Ё",
+        ["ж"] = "ж", ["Ж"] = "Ж",
+        ["з"] = "з", ["З"] = "З",
+        ["и"] = "і", ["И"] = "І",
+        ["й"] = "й", ["Й"] = "Й",
+        ["к"] = "қ", ["К"] = "Қ",
+        ["л"] = "л", ["Л"] = "Л",
+        ["м"] = "м", ["М"] = "М",
+        ["н"] = "ң", ["Н"] = "Ң",
+        ["о"] = "ө", ["О"] = "Ө",
+        ["п"] = "п", ["П"] = "П",
+        ["р"] = "р", ["Р"] = "Р",
+        ["с"] = "с", ["С"] = "С",
+        ["т"] = "т", ["Т"] = "Т",
+        ["у"] = "ү", ["У"] = "Ү",
+        ["ф"] = "ф", ["Ф"] = "Ф",
+        ["х"] = "һ", ["Х"] = "Һ",
+        ["ц"] = "ц", ["Ц"] = "Ц",
+        ["ч"] = "ч", ["Ч"] = "Ч",
+        ["ш"] = "ш", ["Ш"] = "Ш",
+        ["щ"] = "щ", ["Щ"] = "Щ",
+        ["ъ"] = "ъ", ["Ъ"] = "Ъ",
+        ["ы"] = "ы", ["Ы"] = "Ы",
+        ["ь"] = "ь", ["Ь"] = "Ь",
+        ["э"] = "э", ["Э"] = "Э",
+        ["ю"] = "ю", ["Ю"] = "Ю",
+        ["я"] = "я", ["Я"] = "Я"
+    }
+    
+    for rus, kaz in pairs(kazakhMap) do
+        str = string.gsub(str, rus, kaz)
+    end
+    return str
+end
+
 -- Текущая функция обхода (по умолчанию V1)
 local currentBypassFunction = bypassFilter
 
@@ -429,6 +496,9 @@ SendButton.MouseButton1Click:Connect(function()
     if message ~= "" then
         local bypassedMessage = currentBypassFunction(message)
         local success = sendChatMessage(bypassedMessage)
+    else
+        -- Показываем ошибку, если поле пустое
+        showNotification("Ошибка 1: Пустое текстовое поле", errorColor)
     end
 end)
 
@@ -448,13 +518,15 @@ setupButtonHover(MinimizeButton, Color3.fromRGB(255, 200, 0), minimizeColor)
 setupButtonHover(SettingsButton, Color3.fromRGB(100, 100, 110), Color3.fromRGB(80, 80, 90))
 setupButtonHover(V1Button, hoverColor, accentColor)
 setupButtonHover(V2Button, hoverColor, accentColor)
+setupButtonHover(V3Button, hoverColor, accentColor)
 
 -- Анимация для плавающего круга
 setupButtonHover(FloatingCircle, hoverColor, accentColor)
 
 -- Кнопка закрытия
 CloseButton.MouseButton1Click:Connect(function()
-    ScreenGui:Destroy()
+    ScreenGui:Destroy()  -- Сначала закрываем меню
+    showNotification("Меню закрыто полностью")  -- Затем показываем уведомление
 end)
 
 -- Переменные для двойного нажатия
@@ -466,7 +538,7 @@ MinimizeButton.MouseButton1Click:Connect(function()
     MainFrame.Visible = false
     FloatingCircle.Visible = true
     FloatingCircle.Position = UDim2.new(0, mouse.X - 20, 0, mouse.Y - 20)
-    showNotification() -- Показываем уведомление при сворачивании
+    showNotification("Нажмите два раза на круг для открытия меню")
 end)
 
 -- Обработчик для плавающего круга (двойное нажатие)
@@ -520,6 +592,14 @@ end)
 V2Button.MouseButton1Click:Connect(function()
     currentBypassFunction = replaceLetters
     CreatorText.Visible = true
+    SettingsFrame.Visible = false
+    MainFrame.Visible = true
+end)
+
+-- Обработчик кнопки V3
+V3Button.MouseButton1Click:Connect(function()
+    currentBypassFunction = kazakhReplace
+    CreatorText.Visible = false  -- Убираем надпись создателя для V3
     SettingsFrame.Visible = false
     MainFrame.Visible = true
 end)
