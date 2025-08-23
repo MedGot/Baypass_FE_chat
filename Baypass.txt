@@ -1,0 +1,497 @@
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local TextChatService = game:GetService("TextChatService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+
+local player = Players.LocalPlayer
+local mouse = player:GetMouse()
+
+-- Создание основного GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "BypassChatGUI"
+ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+-- Стилизация
+local backgroundColor = Color3.fromRGB(25, 25, 35)
+local accentColor = Color3.fromRGB(0, 120, 215)
+local textColor = Color3.fromRGB(255, 255, 255)
+local hoverColor = Color3.fromRGB(0, 100, 190)
+local closeColor = Color3.fromRGB(200, 50, 50)
+local minimizeColor = Color3.fromRGB(255, 180, 0)
+
+-- Главное окно
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 320, 0, 220)
+MainFrame.Position = UDim2.new(0.5, -160, 0.3, -110)
+MainFrame.BackgroundColor3 = backgroundColor
+MainFrame.BackgroundTransparency = 0.2
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+-- Скругление углов
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 12)
+UICorner.Parent = MainFrame
+
+-- Тень
+local UIStroke = Instance.new("UIStroke")
+UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+UIStroke.Color = Color3.fromRGB(60, 60, 70)
+UIStroke.Thickness = 2
+UIStroke.Parent = MainFrame
+
+-- Заголовок
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, -50, 0, 30)
+Title.Position = UDim2.new(0, 10, 0, 5)
+Title.BackgroundTransparency = 1
+Title.Text = "Baypass FE chat"
+Title.TextColor3 = textColor
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 16
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = MainFrame
+
+-- Поле ввода
+local InputBox = Instance.new("TextBox")
+InputBox.Size = UDim2.new(0.9, 0, 0, 60)
+InputBox.Position = UDim2.new(0.05, 0, 0.25, 0)
+InputBox.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+InputBox.BackgroundTransparency = 0.3
+InputBox.TextColor3 = textColor
+InputBox.Font = Enum.Font.Gotham
+InputBox.TextSize = 14
+InputBox.TextWrapped = true
+InputBox.PlaceholderText = "Введите сообщение..."
+InputBox.Text = ""
+InputBox.Parent = MainFrame
+
+local InputCorner = Instance.new("UICorner")
+InputCorner.CornerRadius = UDim.new(0, 8)
+InputCorner.Parent = InputBox
+
+local InputStroke = Instance.new("UIStroke")
+InputStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+InputStroke.Color = Color3.fromRGB(70, 70, 80)
+InputStroke.Thickness = 1
+InputStroke.Parent = InputBox
+
+-- Кнопка отправки
+local SendButton = Instance.new("TextButton")
+SendButton.Size = UDim2.new(0.9, 0, 0, 30)
+SendButton.Position = UDim2.new(0.05, 0, 0.6, 0)
+SendButton.BackgroundColor3 = accentColor
+SendButton.TextColor3 = textColor
+SendButton.Font = Enum.Font.GothamBold
+SendButton.TextSize = 14
+SendButton.Text = "Sent"
+SendButton.Parent = MainFrame
+
+local SendCorner = Instance.new("UICorner")
+SendCorner.CornerRadius = UDim.new(0, 8)
+SendCorner.Parent = SendButton
+
+-- Кнопка настроек
+local SettingsButton = Instance.new("TextButton")
+SettingsButton.Size = UDim2.new(0.9, 0, 0, 30)
+SettingsButton.Position = UDim2.new(0.05, 0, 0.75, 0)
+SettingsButton.BackgroundColor3 = Color3.fromRGB(80, 80, 90)
+SettingsButton.TextColor3 = textColor
+SettingsButton.Font = Enum.Font.GothamBold
+SettingsButton.TextSize = 14
+SettingsButton.Text = "Settings"
+SettingsButton.Parent = MainFrame
+
+local SettingsCorner = Instance.new("UICorner")
+SettingsCorner.CornerRadius = UDim.new(0, 8)
+SettingsCorner.Parent = SettingsButton
+
+-- Текст создателя (изначально скрыт)
+local CreatorText = Instance.new("TextLabel")
+CreatorText.Size = UDim2.new(0.9, 0, 0, 20)
+CreatorText.Position = UDim2.new(0.05, 0, 0.9, 0)
+CreatorText.BackgroundTransparency = 1
+CreatorText.Text = "By: @vertux12"
+CreatorText.TextColor3 = Color3.fromRGB(180, 180, 180)
+CreatorText.Font = Enum.Font.Gotham
+CreatorText.TextSize = 12
+CreatorText.TextXAlignment = Enum.TextXAlignment.Right
+CreatorText.Visible = false
+CreatorText.Parent = MainFrame
+
+-- Кнопка закрытия
+local CloseButton = Instance.new("TextButton")
+CloseButton.Size = UDim2.new(0, 25, 0, 25)
+CloseButton.Position = UDim2.new(1, -30, 0, 5)
+CloseButton.BackgroundColor3 = closeColor
+CloseButton.TextColor3 = textColor
+CloseButton.Font = Enum.Font.GothamBold
+CloseButton.TextSize = 14
+CloseButton.Text = "X"
+CloseButton.Parent = MainFrame
+
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(0, 6)
+CloseCorner.Parent = CloseButton
+
+-- Кнопка сворачивания
+local MinimizeButton = Instance.new("TextButton")
+MinimizeButton.Size = UDim2.new(0, 25, 0, 25)
+MinimizeButton.Position = UDim2.new(1, -60, 0, 5)
+MinimizeButton.BackgroundColor3 = minimizeColor
+MinimizeButton.TextColor3 = textColor
+MinimizeButton.Font = Enum.Font.GothamBold
+MinimizeButton.TextSize = 14
+MinimizeButton.Text = "_"
+MinimizeButton.Parent = MainFrame
+
+local MinimizeCorner = Instance.new("UICorner")
+MinimizeCorner.CornerRadius = UDim.new(0, 6)
+MinimizeCorner.Parent = MinimizeButton
+
+-- Плавающий круг (изначально скрыт)
+local FloatingCircle = Instance.new("TextButton")
+FloatingCircle.Size = UDim2.new(0, 40, 0, 40)
+FloatingCircle.Position = UDim2.new(0, 20, 0, 20)
+FloatingCircle.BackgroundColor3 = accentColor
+FloatingCircle.BackgroundTransparency = 0.2
+FloatingCircle.BorderSizePixel = 0
+FloatingCircle.Active = true
+FloatingCircle.Draggable = true
+FloatingCircle.Visible = false
+FloatingCircle.Text = ""
+FloatingCircle.AutoButtonColor = false
+FloatingCircle.Parent = ScreenGui
+
+local CircleCorner = Instance.new("UICorner")
+CircleCorner.CornerRadius = UDim.new(1, 0)
+CircleCorner.Parent = FloatingCircle
+
+local CircleStroke = Instance.new("UIStroke")
+CircleStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+CircleStroke.Color = accentColor
+CircleStroke.Thickness = 2
+CircleStroke.Parent = FloatingCircle
+
+local CircleText = Instance.new("TextLabel")
+CircleText.Size = UDim2.new(1, 0, 1, 0)
+CircleText.BackgroundTransparency = 1
+CircleText.Text = "FE"
+CircleText.TextColor3 = textColor
+CircleText.Font = Enum.Font.GothamBold
+CircleText.TextSize = 16
+CircleText.Parent = FloatingCircle
+
+-- Текст уведомления
+local Notification = Instance.new("TextLabel")
+Notification.Size = UDim2.new(0, 300, 0, 30)
+Notification.Position = UDim2.new(0.5, -150, 0.05, 0)
+Notification.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+Notification.BackgroundTransparency = 0.3
+Notification.TextColor3 = textColor
+Notification.Font = Enum.Font.GothamBold
+Notification.TextSize = 14
+Notification.Text = "Нажмите два раза на круг для открытия меню"
+Notification.Visible = false
+Notification.Parent = ScreenGui
+
+local NotificationCorner = Instance.new("UICorner")
+NotificationCorner.CornerRadius = UDim.new(0, 8)
+NotificationCorner.Parent = Notification
+
+-- Фрейм для настроек
+local SettingsFrame = Instance.new("Frame")
+SettingsFrame.Size = UDim2.new(0, 320, 0, 200)
+SettingsFrame.Position = UDim2.new(0.5, -160, 0.3, -100)
+SettingsFrame.BackgroundColor3 = backgroundColor
+SettingsFrame.BackgroundTransparency = 0.2
+SettingsFrame.BorderSizePixel = 0
+SettingsFrame.Active = true
+SettingsFrame.Draggable = true
+SettingsFrame.Visible = false
+SettingsFrame.Parent = ScreenGui
+
+local SettingsFrameCorner = Instance.new("UICorner")
+SettingsFrameCorner.CornerRadius = UDim.new(0, 12)
+SettingsFrameCorner.Parent = SettingsFrame
+
+local SettingsFrameStroke = Instance.new("UIStroke")
+SettingsFrameStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+SettingsFrameStroke.Color = Color3.fromRGB(60, 60, 70)
+SettingsFrameStroke.Thickness = 2
+SettingsFrameStroke.Parent = SettingsFrame
+
+local SettingsTitle = Instance.new("TextLabel")
+SettingsTitle.Size = UDim2.new(1, -50, 0, 30)
+SettingsTitle.Position = UDim2.new(0, 10, 0, 5)
+SettingsTitle.BackgroundTransparency = 1
+SettingsTitle.Text = "Settings"
+SettingsTitle.TextColor3 = textColor
+SettingsTitle.Font = Enum.Font.GothamBold
+SettingsTitle.TextSize = 16
+SettingsTitle.TextXAlignment = Enum.TextXAlignment.Left
+SettingsTitle.Parent = SettingsFrame
+
+local V1Button = Instance.new("TextButton")
+V1Button.Size = UDim2.new(0.9, 0, 0, 40)
+V1Button.Position = UDim2.new(0.05, 0, 0.25, 0)
+V1Button.BackgroundColor3 = accentColor
+V1Button.TextColor3 = textColor
+V1Button.Font = Enum.Font.GothamBold
+V1Button.TextSize = 14
+V1Button.Text = "V1 - English Bypass"
+V1Button.Parent = SettingsFrame
+
+local V1Corner = Instance.new("UICorner")
+V1Corner.CornerRadius = UDim.new(0, 8)
+V1Corner.Parent = V1Button
+
+local V2Button = Instance.new("TextButton")
+V2Button.Size = UDim2.new(0.9, 0, 0, 40)
+V2Button.Position = UDim2.new(0.05, 0, 0.6, 0)
+V2Button.BackgroundColor3 = accentColor
+V2Button.TextColor3 = textColor
+V2Button.Font = Enum.Font.GothamBold
+V2Button.TextSize = 14
+V2Button.Text = "V2 - Greek Bypass"
+V2Button.Parent = SettingsFrame
+
+local V2Corner = Instance.new("UICorner")
+V2Corner.CornerRadius = UDim.new(0, 8)
+V2Corner.Parent = V2Button
+
+-- Функция замены символов (ИСПРАВЛЕННАЯ с использованием string.char)
+local function bypassFilter(text)
+    local charMap = {
+        [string.char(0xD0, 0xB0)] = "a",
+        [string.char(0xD0, 0xB5)] = "e",
+        [string.char(0xD1, 0x81)] = "c",
+        [string.char(0xD0, 0xBE)] = "o",
+        [string.char(0xD1, 0x80)] = "p",
+        [string.char(0xD1, 0x85)] = "x",
+        [string.char(0xD1, 0x83)] = "y",
+        [string.char(0xD0, 0xBD)] = "h",
+        [string.char(0xD0, 0xBF)] = "n",
+        [string.char(0xD0, 0xB8)] = "u",
+        [string.char(0xD0, 0xBA)] = "k",
+        [string.char(0xD0, 0xBC)] = "m",
+        [string.char(0xD1, 0x82)] = "t",
+        [string.char(0xD0, 0xB2)] = "b",
+        [string.char(0xD0, 0xB3)] = "r",
+        [string.char(0xD0, 0xB4)] = "d",
+        [string.char(0xD0, 0x90)] = "A",
+        [string.char(0xD0, 0x92)] = "B",
+        [string.char(0xD0, 0x95)] = "E",
+        [string.char(0xD0, 0x9A)] = "K",
+        [string.char(0xD0, 0x9C)] = "M",
+        [string.char(0xD0, 0x9D)] = "H",
+        [string.char(0xD0, 0x9E)] = "O",
+        [string.char(0xD0, 0xA0)] = "P",
+        [string.char(0xD0, 0xA1)] = "C",
+        [string.char(0xD0, 0xA2)] = "T",
+        [string.char(0xD0, 0xA5)] = "X",
+        [string.char(0xD0, 0xA3)] = "Y",
+        [string.char(0xD0, 0x98)] = "U",
+        [string.char(0xD0, 0x9F)] = "N",
+        [string.char(0xD0, 0x93)] = "F",
+        [string.char(0xD0, 0x94)] = "D"
+    }
+
+    for cyrillic, latin in pairs(charMap) do
+        text = string.gsub(text, cyrillic, latin)
+    end
+    return text
+end
+
+-- Новая функция замены на греческие символы
+local function replaceLetters(str)
+    str = string.gsub(str, "а", "α")
+    str = string.gsub(str, "б", "δ")
+    str = string.gsub(str, "в", "β")
+    str = string.gsub(str, "г", "г")
+    str = string.gsub(str, "д", "д")
+    str = string.gsub(str, "е", "ε")
+    str = string.gsub(str, "ё", "έ")
+    str = string.gsub(str, "ж", "ж")
+    str = string.gsub(str, "з", "ζ")
+    str = string.gsub(str, "и", "υ")
+    str = string.gsub(str, "й", "ϋ")
+    str = string.gsub(str, "к", "κ")
+    str = string.gsub(str, "л", "λ")
+    str = string.gsub(str, "м", "m")
+    str = string.gsub(str, "н", "η")
+    str = string.gsub(str, "о", "ο")
+    str = string.gsub(str, "п", "π")
+    str = string.gsub(str, "р", "ρ")
+    str = string.gsub(str, "с", "ς")
+    str = string.gsub(str, "т", "τ")
+    str = string.gsub(str, "у", "γ")
+    str = string.gsub(str, "ф", "φ")
+    str = string.gsub(str, "х", "χ")
+    str = string.gsub(str, "ц", "ц")
+    str = string.gsub(str, "ч", "ч")
+    str = string.gsub(str, "ш", "ω")
+    str = string.gsub(str, "щ", "ώ")
+    str = string.gsub(str, "ъ", "ъ")
+    str = string.gsub(str, "ы", "ы")
+    str = string.gsub(str, "ь", "ь")
+    str = string.gsub(str, "э", "э")
+    str = string.gsub(str, "ю", "ю")
+    str = string.gsub(str, "я", "я")
+    str = string.gsub(str, "А", "Α")
+    str = string.gsub(str, "Б", "Δ")
+    str = string.gsub(str, "В", "Β")
+    str = string.gsub(str, "Г", "Г")
+    str = string.gsub(str, "Д", "Д")
+    str = string.gsub(str, "Е", "Ε")
+    str = string.gsub(str, "Ё", "Έ")
+    str = string.gsub(str, "Ж", "Ж")
+    str = string.gsub(str, "З", "Ζ")
+    str = string.gsub(str, "И", "Υ")
+    str = string.gsub(str, "Й", "Ϋ")
+    str = string.gsub(str, "К", "Κ")
+    str = string.gsub(str, "Л", "Λ")
+    str = string.gsub(str, "М", "M")
+    str = string.gsub(str, "Н", "Η")
+    str = string.gsub(str, "О", "Ο")
+    str = string.gsub(str, "П", "Π")
+    str = string.gsub(str, "Р", "Ρ")
+    str = string.gsub(str, "С", "Σ")
+    str = string.gsub(str, "Т", "Τ")
+    str = string.gsub(str, "У", "Γ")
+    str = string.gsub(str, "Ф", "Φ")
+    str = string.gsub(str, "Х", "Χ")
+    str = string.gsub(str, "Ц", "Ц")
+    str = string.gsub(str, "Ч", "Ч")
+    str = string.gsub(str, "Ш", "Ω")
+    str = string.gsub(str, "Щ", "Ώ")
+    str = string.gsub(str, "Ъ", "Ъ")
+    str = string.gsub(str, "Ы", "Ы")
+    str = string.gsub(str, "Ь", "Ь")
+    str = string.gsub(str, "Э", "Э")
+    str = string.gsub(str, "Ю", "Ю")
+    str = string.gsub(str, "Я", "Я")
+    return str
+end
+
+-- Текущая функция обхода (по умолчанию V1)
+local currentBypassFunction = bypassFilter
+
+-- Функция отправки сообщения
+local function sendChatMessage(message)
+    if TextChatService and TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+        local success, err = pcall(function()
+            TextChatService.TextChannels.RBXGeneral:SendAsync(message)
+        end)
+        if success then
+            return true
+        end
+    end
+    return false
+end
+
+-- Обработчик нажатия кнопки отправки
+SendButton.MouseButton1Click:Connect(function()
+    local message = InputBox.Text
+    if message ~= "" then
+        local bypassedMessage = currentBypassFunction(message)
+        local success = sendChatMessage(bypassedMessage)
+    end
+end)
+
+-- Анимация кнопок
+local function setupButtonHover(button, hoverColor, originalColor)
+    button.MouseEnter:Connect(function()
+        TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = hoverColor}):Play()
+    end)
+    button.MouseLeave:Connect(function()
+        TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = originalColor}):Play()
+    end)
+end
+
+setupButtonHover(SendButton, hoverColor, accentColor)
+setupButtonHover(CloseButton, Color3.fromRGB(220, 70, 70), closeColor)
+setupButtonHover(MinimizeButton, Color3.fromRGB(255, 200, 0), minimizeColor)
+setupButtonHover(SettingsButton, Color3.fromRGB(100, 100, 110), Color3.fromRGB(80, 80, 90))
+setupButtonHover(V1Button, hoverColor, accentColor)
+setupButtonHover(V2Button, hoverColor, accentColor)
+
+-- Анимация для плавающего круга
+setupButtonHover(FloatingCircle, hoverColor, accentColor)
+
+-- Кнопка закрытия
+CloseButton.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
+-- Переменные для двойного нажатия
+local lastClickTime = 0
+local clickCount = 0
+
+-- Кнопка сворачивания
+MinimizeButton.MouseButton1Click:Connect(function()
+    MainFrame.Visible = false
+    FloatingCircle.Visible = true
+    FloatingCircle.Position = UDim2.new(0, mouse.X - 20, 0, mouse.Y - 20)
+    Notification.Visible = true
+end)
+
+-- Обработчик для плавающего круга (двойное нажатие)
+FloatingCircle.MouseButton1Click:Connect(function()
+    local currentTime = tick()
+    if currentTime - lastClickTime < 0.5 then
+        clickCount = clickCount + 1
+        if clickCount >= 2 then
+            MainFrame.Visible = true
+            FloatingCircle.Visible = false
+            Notification.Visible = false
+            clickCount = 0
+        end
+    else
+        clickCount = 1
+    end
+    lastClickTime = currentTime
+end)
+
+-- Добавляем обработку нажатия Enter в текстовом поле
+InputBox.FocusLost:Connect(function(enterPressed)
+    if enterPressed then
+        SendButton.MouseButton1Click:Fire()
+    end
+end)
+
+-- Добавляем возможность открытия/закрытия GUI горячей клавишей
+local guiVisible = true
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.RightShift then
+        guiVisible = not guiVisible
+        MainFrame.Visible = guiVisible
+    end
+end)
+
+-- Обработчик кнопки Settings
+SettingsButton.MouseButton1Click:Connect(function()
+    MainFrame.Visible = false
+    SettingsFrame.Visible = true
+end)
+
+-- Обработчик кнопки V1
+V1Button.MouseButton1Click:Connect(function()
+    currentBypassFunction = bypassFilter
+    CreatorText.Visible = false
+    SettingsFrame.Visible = false
+    MainFrame.Visible = true
+end)
+
+-- Обработчик кнопки V2
+V2Button.MouseButton1Click:Connect(function()
+    currentBypassFunction = replaceLetters
+    CreatorText.Visible = true
+    SettingsFrame.Visible = false
+    MainFrame.Visible = true
+end)
