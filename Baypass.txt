@@ -186,10 +186,10 @@ CircleText.Font = Enum.Font.GothamBold
 CircleText.TextSize = 16
 CircleText.Parent = FloatingCircle
 
--- Текст уведомления
+-- Текст уведомления (изначально скрыт и находится выше экрана)
 local Notification = Instance.new("TextLabel")
 Notification.Size = UDim2.new(0, 300, 0, 30)
-Notification.Position = UDim2.new(0.5, -150, 0.05, 0)
+Notification.Position = UDim2.new(0.5, -150, 0, -50)
 Notification.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
 Notification.BackgroundTransparency = 0.3
 Notification.TextColor3 = textColor
@@ -202,6 +202,35 @@ Notification.Parent = ScreenGui
 local NotificationCorner = Instance.new("UICorner")
 NotificationCorner.CornerRadius = UDim.new(0, 8)
 NotificationCorner.Parent = Notification
+
+-- Функция для показа уведомления
+local function showNotification()
+    Notification.Visible = true
+    Notification.Position = UDim2.new(0.5, -150, 0, -50)
+    
+    -- Анимация появления (плавное перемещение вниз)
+    local showTween = TweenService:Create(
+        Notification,
+        TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+        {Position = UDim2.new(0.5, -150, 0.05, 0)}
+    )
+    showTween:Play()
+    
+    -- Через 3 секунды скрываем уведомление
+    task.delay(3, function()
+        -- Анимация исчезновения (плавное перемещение вверх)
+        local hideTween = TweenService:Create(
+            Notification,
+            TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            {Position = UDim2.new(0.5, -150, 0, -50)}
+        )
+        hideTween:Play()
+        
+        hideTween.Completed:Connect(function()
+            Notification.Visible = false
+        end)
+    end)
+end
 
 -- Фрейм для настроек
 local SettingsFrame = Instance.new("Frame")
@@ -437,7 +466,7 @@ MinimizeButton.MouseButton1Click:Connect(function()
     MainFrame.Visible = false
     FloatingCircle.Visible = true
     FloatingCircle.Position = UDim2.new(0, mouse.X - 20, 0, mouse.Y - 20)
-    Notification.Visible = true
+    showNotification() -- Показываем уведомление при сворачивании
 end)
 
 -- Обработчик для плавающего круга (двойное нажатие)
@@ -448,7 +477,6 @@ FloatingCircle.MouseButton1Click:Connect(function()
         if clickCount >= 2 then
             MainFrame.Visible = true
             FloatingCircle.Visible = false
-            Notification.Visible = false
             clickCount = 0
         end
     else
