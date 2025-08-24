@@ -20,7 +20,7 @@ local textColor = Color3.fromRGB(255, 255, 255)
 local hoverColor = Color3.fromRGB(0, 100, 190)
 local closeColor = Color3.fromRGB(200, 50, 50)
 local minimizeColor = Color3.fromRGB(255, 180, 0)
-local errorColor = Color3.fromRGB(200, 50, 50) -- Красный цвет для ошибок
+local errorColor = Color3.fromRGB(200, 50, 50)
 
 -- Главное окно
 local MainFrame = Instance.new("Frame")
@@ -111,7 +111,7 @@ local SettingsCorner = Instance.new("UICorner")
 SettingsCorner.CornerRadius = UDim.new(0, 8)
 SettingsCorner.Parent = SettingsButton
 
--- Текст создателя (изначально скрыт)
+-- Текст создателя
 local CreatorText = Instance.new("TextLabel")
 CreatorText.Size = UDim2.new(0.9, 0, 0, 20)
 CreatorText.Position = UDim2.new(0.05, 0, 0.9, 0)
@@ -154,7 +154,7 @@ local MinimizeCorner = Instance.new("UICorner")
 MinimizeCorner.CornerRadius = UDim.new(0, 6)
 MinimizeCorner.Parent = MinimizeButton
 
--- Плавающий круг (изначально скрыт)
+-- Плавающий круг
 local FloatingCircle = Instance.new("TextButton")
 FloatingCircle.Size = UDim2.new(0, 40, 0, 40)
 FloatingCircle.Position = UDim2.new(0, 20, 0, 20)
@@ -187,7 +187,7 @@ CircleText.Font = Enum.Font.GothamBold
 CircleText.TextSize = 16
 CircleText.Parent = FloatingCircle
 
--- Текст уведомления (изначально скрыт и находится выше экрана)
+-- Текст уведомления
 local Notification = Instance.new("TextLabel")
 Notification.Size = UDim2.new(0, 300, 0, 30)
 Notification.Position = UDim2.new(0.5, -150, 0, -50)
@@ -204,37 +204,29 @@ local NotificationCorner = Instance.new("UICorner")
 NotificationCorner.CornerRadius = UDim.new(0, 8)
 NotificationCorner.Parent = Notification
 
--- Функция для показа уведомления с возможностью изменения текста и цвета
-local function showNotification(text, color)
-    if color then
-        Notification.BackgroundColor3 = color
-    else
-        Notification.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-    end
-    
+-- Функция для показа уведомления
+local function showNotification(text, color, isError)
     Notification.Text = text
+    Notification.BackgroundColor3 = color or Color3.fromRGB(40, 40, 50)
     Notification.Visible = true
-    Notification.Position = UDim2.new(0.5, -150, 0, -50)
     
-    -- Анимация появления (плавное перемещение вниз)
-    local showTween = TweenService:Create(
+    local tweenIn = TweenService:Create(
         Notification,
-        TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-        {Position = UDim2.new(0.5, -150, 0.05, 0)}
+        TweenInfo.new(0.3),
+        {Position = UDim2.new(0.5, -150, 0, 20)}
     )
-    showTween:Play()
     
-    -- Через 3 секунды скрываем уведомление
-    task.delay(3, function()
-        -- Анимация исчезновения (плавное перемещение вверх)
-        local hideTween = TweenService:Create(
-            Notification,
-            TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-            {Position = UDim2.new(0.5, -150, 0, -50)}
-        )
-        hideTween:Play()
-        
-        hideTween.Completed:Connect(function()
+    local tweenOut = TweenService:Create(
+        Notification,
+        TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut),
+        {Position = UDim2.new(0.5, -150, 0, -50)}
+    )
+    
+    tweenIn:Play()
+    tweenIn.Completed:Connect(function()
+        wait(2)
+        tweenOut:Play()
+        tweenOut.Completed:Connect(function()
             Notification.Visible = false
         end)
     end)
@@ -242,8 +234,8 @@ end
 
 -- Фрейм для настроек
 local SettingsFrame = Instance.new("Frame")
-SettingsFrame.Size = UDim2.new(0, 320, 0, 250)
-SettingsFrame.Position = UDim2.new(0.5, -160, 0.3, -125)
+SettingsFrame.Size = UDim2.new(0, 320, 0, 280)
+SettingsFrame.Position = UDim2.new(0.5, -160, 0.3, -140)
 SettingsFrame.BackgroundColor3 = backgroundColor
 SettingsFrame.BackgroundTransparency = 0.2
 SettingsFrame.BorderSizePixel = 0
@@ -273,221 +265,292 @@ SettingsTitle.TextSize = 16
 SettingsTitle.TextXAlignment = Enum.TextXAlignment.Left
 SettingsTitle.Parent = SettingsFrame
 
+-- Кнопка возврата
+local BackButton = Instance.new("TextButton")
+BackButton.Size = UDim2.new(0, 25, 0, 25)
+BackButton.Position = UDim2.new(1, -30, 0, 5)
+BackButton.BackgroundColor3 = minimizeColor
+BackButton.TextColor3 = textColor
+BackButton.Font = Enum.Font.GothamBold
+BackButton.TextSize = 14
+BackButton.Text = "<-"
+BackButton.Parent = SettingsFrame
+
+local BackCorner = Instance.new("UICorner")
+BackCorner.CornerRadius = UDim.new(0, 6)
+BackCorner.Parent = BackButton
+
+-- Контейнер для кнопок версий
+local VersionsContainer = Instance.new("Frame")
+VersionsContainer.Size = UDim2.new(0.9, 0, 0, 40)
+VersionsContainer.Position = UDim2.new(0.05, 0, 0.2, 0)
+VersionsContainer.BackgroundTransparency = 1
+VersionsContainer.Parent = SettingsFrame
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.FillDirection = Enum.FillDirection.Horizontal
+UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+UIListLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+UIListLayout.Padding = UDim.new(0, 10)
+UIListLayout.Parent = VersionsContainer
+
+-- Кнопки версий
 local V1Button = Instance.new("TextButton")
-V1Button.Size = UDim2.new(0.9, 0, 0, 40)
-V1Button.Position = UDim2.new(0.05, 0, 0.2, 0)
+V1Button.Size = UDim2.new(0.3, 0, 1, 0)
 V1Button.BackgroundColor3 = accentColor
 V1Button.TextColor3 = textColor
 V1Button.Font = Enum.Font.GothamBold
 V1Button.TextSize = 14
-V1Button.Text = "V1 - English Bypass"
-V1Button.Parent = SettingsFrame
+V1Button.Text = "V1"
+V1Button.Parent = VersionsContainer
 
 local V1Corner = Instance.new("UICorner")
 V1Corner.CornerRadius = UDim.new(0, 8)
 V1Corner.Parent = V1Button
 
 local V2Button = Instance.new("TextButton")
-V2Button.Size = UDim2.new(0.9, 0, 0, 40)
-V2Button.Position = UDim2.new(0.05, 0, 0.4, 0)
+V2Button.Size = UDim2.new(0.3, 0, 1, 0)
 V2Button.BackgroundColor3 = accentColor
 V2Button.TextColor3 = textColor
 V2Button.Font = Enum.Font.GothamBold
 V2Button.TextSize = 14
-V2Button.Text = "V2 - Greek Bypass"
-V2Button.Parent = SettingsFrame
+V2Button.Text = "V2"
+V2Button.Parent = VersionsContainer
 
 local V2Corner = Instance.new("UICorner")
 V2Corner.CornerRadius = UDim.new(0, 8)
 V2Corner.Parent = V2Button
 
--- Добавляем кнопку V3
 local V3Button = Instance.new("TextButton")
-V3Button.Size = UDim2.new(0.9, 0, 0, 40)
-V3Button.Position = UDim2.new(0.05, 0, 0.6, 0)
+V3Button.Size = UDim2.new(0.3, 0, 1, 0)
 V3Button.BackgroundColor3 = accentColor
 V3Button.TextColor3 = textColor
 V3Button.Font = Enum.Font.GothamBold
 V3Button.TextSize = 14
-V3Button.Text = "V3 - Kazakh Bypass"
-V3Button.Parent = SettingsFrame
+V3Button.Text = "V3"
+V3Button.Parent = VersionsContainer
 
 local V3Corner = Instance.new("UICorner")
 V3Corner.CornerRadius = UDim.new(0, 8)
 V3Corner.Parent = V3Button
 
--- Функция замены символов (ИСПРАВЛЕННАЯ с использованием string.char)
-local function bypassFilter(text)
-    local charMap = {
-        [string.char(0xD0, 0xB0)] = "a",
-        [string.char(0xD0, 0xB5)] = "e",
-        [string.char(0xD1, 0x81)] = "c",
-        [string.char(0xD0, 0xBE)] = "o",
-        [string.char(0xD1, 0x80)] = "p",
-        [string.char(0xD1, 0x85)] = "x",
-        [string.char(0xD1, 0x83)] = "y",
-        [string.char(0xD0, 0xBD)] = "h",
-        [string.char(0xD0, 0xBF)] = "n",
-        [string.char(0xD0, 0xB8)] = "u",
-        [string.char(0xD0, 0xBA)] = "k",
-        [string.char(0xD0, 0xBC)] = "m",
-        [string.char(0xD1, 0x82)] = "t",
-        [string.char(0xD0, 0xB2)] = "b",
-        [string.char(0xD0, 0xB3)] = "r",
-        [string.char(0xD0, 0xB4)] = "d",
-        [string.char(0xD0, 0x90)] = "A",
-        [string.char(0xD0, 0x92)] = "B",
-        [string.char(0xD0, 0x95)] = "E",
-        [string.char(0xD0, 0x9A)] = "K",
-        [string.char(0xD0, 0x9C)] = "M",
-        [string.char(0xD0, 0x9D)] = "H",
-        [string.char(0xD0, 0x9E)] = "O",
-        [string.char(0xD0, 0xA0)] = "P",
-        [string.char(0xD0, 0xA1)] = "C",
-        [string.char(0xD0, 0xA2)] = "T",
-        [string.char(0xD0, 0xA5)] = "X",
-        [string.char(0xD0, 0xA3)] = "Y",
-        [string.char(0xD0, 0x98)] = "U",
-        [string.char(0xD0, 0x9F)] = "N",
-        [string.char(0xD0, 0x93)] = "F",
-        [string.char(0xD0, 0x94)] = "D"
-    }
+-- Добавляем текст описания версий
+local VersionInfoText = Instance.new("TextLabel")
+VersionInfoText.Size = UDim2.new(0.9, 0, 0, 40)
+VersionInfoText.Position = UDim2.new(0.05, 0, 0.8, 0)
+VersionInfoText.BackgroundTransparency = 1
+VersionInfoText.Text = "V1 - English\nV2 - Greek\nV3 - Kazakh"
+VersionInfoText.TextColor3 = Color3.fromRGB(180, 180, 180)
+VersionInfoText.Font = Enum.Font.Gotham
+VersionInfoText.TextSize = 12
+VersionInfoText.TextXAlignment = Enum.TextXAlignment.Left
+VersionInfoText.TextYAlignment = Enum.TextYAlignment.Top
+VersionInfoText.Parent = SettingsFrame
 
-    for cyrillic, latin in pairs(charMap) do
-        text = string.gsub(text, cyrillic, latin)
+-- Функция замены символов
+local function bypassFilter(text)
+    local success, result = pcall(function()
+        local charMap = {
+            [string.char(0xD0, 0xB0)] = "a",
+            [string.char(0xD0, 0xB5)] = "e",
+            [string.char(0xD1, 0x81)] = "c",
+            [string.char(0xD0, 0xBE)] = "o",
+            [string.char(0xD1, 0x80)] = "p",
+            [string.char(0xD1, 0x85)] = "x",
+            [string.char(0xD1, 0x83)] = "y",
+            [string.char(0xD0, 0xBD)] = "h",
+            [string.char(0xD0, 0xBF)] = "n",
+            [string.char(0xD0, 0xB8)] = "u",
+            [string.char(0xD0, 0xBA)] = "k",
+            [string.char(0xD0, 0xBC)] = "m",
+            [string.char(0xD1, 0x82)] = "t",
+            [string.char(0xD0, 0xB2)] = "b",
+            [string.char(0xD0, 0xB3)] = "r",
+            [string.char(0xD0, 0xB4)] = "d",
+            [string.char(0xD0, 0x90)] = "A",
+            [string.char(0xD0, 0x92)] = "B",
+            [string.char(0xD0, 0x95)] = "E",
+            [string.char(0xD0, 0x9A)] = "K",
+            [string.char(0xD0, 0x9C)] = "M",
+            [string.char(0xD0, 0x9D)] = "H",
+            [string.char(0xD0, 0x9E)] = "O",
+            [string.char(0xD0, 0xA0)] = "P",
+            [string.char(0xD0, 0xA1)] = "C",
+            [string.char(0xD0, 0xA2)] = "T",
+            [string.char(0xD0, 0xA5)] = "X",
+            [string.char(0xD0, 0xA3)] = "Y",
+            [string.char(0xD0, 0x98)] = "U",
+            [string.char(0xD0, 0x9F)] = "N",
+            [string.char(0xD0, 0x93)] = "F",
+            [string.char(0xD0, 0x94)] = "D"
+        }
+        
+        for cyrillic, latin in pairs(charMap) do
+            text = string.gsub(text, cyrillic, latin)
+        end
+        return text
+    end)
+    
+    if not success then
+        showNotification("Ошибка 4: Ошибка обхода фильтрации", errorColor, true)
+        return text
     end
-    return text
+    
+    return result
 end
 
 -- Новая функция замены на греческие символы
 local function replaceLetters(str)
-    str = string.gsub(str, "а", "α")
-    str = string.gsub(str, "б", "δ")
-    str = string.gsub(str, "в", "β")
-    str = string.gsub(str, "г", "г")
-    str = string.gsub(str, "д", "д")
-    str = string.gsub(str, "е", "ε")
-    str = string.gsub(str, "ё", "έ")
-    str = string.gsub(str, "ж", "ж")
-    str = string.gsub(str, "з", "ζ")
-    str = string.gsub(str, "и", "υ")
-    str = string.gsub(str, "й", "ϋ")
-    str = string.gsub(str, "к", "κ")
-    str = string.gsub(str, "л", "λ")
-    str = string.gsub(str, "м", "m")
-    str = string.gsub(str, "н", "η")
-    str = string.gsub(str, "о", "ο")
-    str = string.gsub(str, "п", "π")
-    str = string.gsub(str, "р", "ρ")
-    str = string.gsub(str, "с", "ς")
-    str = string.gsub(str, "т", "τ")
-    str = string.gsub(str, "у", "γ")
-    str = string.gsub(str, "ф", "φ")
-    str = string.gsub(str, "х", "χ")
-    str = string.gsub(str, "ц", "ц")
-    str = string.gsub(str, "ч", "ч")
-    str = string.gsub(str, "ш", "ω")
-    str = string.gsub(str, "щ", "ώ")
-    str = string.gsub(str, "ъ", "ъ")
-    str = string.gsub(str, "ы", "ы")
-    str = string.gsub(str, "ь", "ь")
-    str = string.gsub(str, "э", "э")
-    str = string.gsub(str, "ю", "ю")
-    str = string.gsub(str, "я", "я")
-    str = string.gsub(str, "А", "Α")
-    str = string.gsub(str, "Б", "Δ")
-    str = string.gsub(str, "В", "Β")
-    str = string.gsub(str, "Г", "Г")
-    str = string.gsub(str, "Д", "Д")
-    str = string.gsub(str, "Е", "Ε")
-    str = string.gsub(str, "Ё", "Έ")
-    str = string.gsub(str, "Ж", "Ж")
-    str = string.gsub(str, "З", "Ζ")
-    str = string.gsub(str, "И", "Υ")
-    str = string.gsub(str, "Й", "Ϋ")
-    str = string.gsub(str, "К", "Κ")
-    str = string.gsub(str, "Л", "Λ")
-    str = string.gsub(str, "М", "M")
-    str = string.gsub(str, "Н", "Η")
-    str = string.gsub(str, "О", "Ο")
-    str = string.gsub(str, "П", "Π")
-    str = string.gsub(str, "Р", "Ρ")
-    str = string.gsub(str, "С", "Σ")
-    str = string.gsub(str, "Т", "Τ")
-    str = string.gsub(str, "У", "Γ")
-    str = string.gsub(str, "Ф", "Φ")
-    str = string.gsub(str, "Х", "Χ")
-    str = string.gsub(str, "Ц", "Ц")
-    str = string.gsub(str, "Ч", "Ч")
-    str = string.gsub(str, "Ш", "Ω")
-    str = string.gsub(str, "Щ", "Ώ")
-    str = string.gsub(str, "Ъ", "Ъ")
-    str = string.gsub(str, "Ы", "Ы")
-    str = string.gsub(str, "Ь", "Ь")
-    str = string.gsub(str, "Э", "Э")
-    str = string.gsub(str, "Ю", "Ю")
-    str = string.gsub(str, "Я", "Я")
-    return str
-end
-
--- Новая функция замены на казахстанские символы (похожие на русские)
-local function kazakhReplace(str)
-    local kazakhMap = {
-        ["а"] = "ә", ["А"] = "Ә",
-        ["б"] = "б", ["Б"] = "Б",
-        ["в"] = "в", ["В"] = "В",
-        ["г"] = "ғ", ["Г"] = "Ғ",
-        ["д"] = "д", ["Д"] = "Д",
-        ["е"] = "е", ["Е"] = "Е",
-        ["ё"] = "ё", ["Ё"] = "Ё",
-        ["ж"] = "ж", ["Ж"] = "Ж",
-        ["з"] = "з", ["З"] = "З",
-        ["и"] = "і", ["И"] = "І",
-        ["й"] = "й", ["Й"] = "Й",
-        ["к"] = "қ", ["К"] = "Қ",
-        ["л"] = "л", ["Л"] = "Л",
-        ["м"] = "м", ["М"] = "М",
-        ["н"] = "ң", ["Н"] = "Ң",
-        ["о"] = "ө", ["О"] = "Ө",
-        ["п"] = "п", ["П"] = "П",
-        ["р"] = "р", ["Р"] = "Р",
-        ["с"] = "с", ["С"] = "С",
-        ["т"] = "т", ["Т"] = "Т",
-        ["у"] = "ү", ["У"] = "Ү",
-        ["ф"] = "ф", ["Ф"] = "Ф",
-        ["х"] = "һ", ["Х"] = "Һ",
-        ["ц"] = "ц", ["Ц"] = "Ц",
-        ["ч"] = "ч", ["Ч"] = "Ч",
-        ["ш"] = "ш", ["Ш"] = "Ш",
-        ["щ"] = "щ", ["Щ"] = "Щ",
-        ["ъ"] = "ъ", ["Ъ"] = "Ъ",
-        ["ы"] = "ы", ["Ы"] = "Ы",
-        ["ь"] = "ь", ["Ь"] = "Ь",
-        ["э"] = "э", ["Э"] = "Э",
-        ["ю"] = "ю", ["Ю"] = "Ю",
-        ["я"] = "я", ["Я"] = "Я"
-    }
+    local success, result = pcall(function()
+        str = string.gsub(str, "а", "α")
+        str = string.gsub(str, "б", "δ")
+        str = string.gsub(str, "в", "β")
+        str = string.gsub(str, "г", "г")
+        str = string.gsub(str, "д", "д")
+        str = string.gsub(str, "е", "ε")
+        str = string.gsub(str, "ё", "έ")
+        str = string.gsub(str, "ж", "ж")
+        str = string.gsub(str, "з", "ζ")
+        str = string.gsub(str, "и", "υ")
+        str = string.gsub(str, "й", "ϋ")
+        str = string.gsub(str, "к", "κ")
+        str = string.gsub(str, "л", "λ")
+        str = string.gsub(str, "м", "m")
+        str = string.gsub(str, "н", "η")
+        str = string.gsub(str, "о", "ο")
+        str = string.gsub(str, "п", "π")
+        str = string.gsub(str, "р", "ρ")
+        str = string.gsub(str, "с", "ς")
+        str = string.gsub(str, "т", "τ")
+        str = string.gsub(str, "у", "γ")
+        str = string.gsub(str, "ф", "φ")
+        str = string.gsub(str, "х", "χ")
+        str = string.gsub(str, "ц", "ц")
+        str = string.gsub(str, "ч", "ч")
+        str = string.gsub(str, "ш", "ω")
+        str = string.gsub(str, "щ", "ώ")
+        str = string.gsub(str, "ъ", "ъ")
+        str = string.gsub(str, "ы", "ы")
+        str = string.gsub(str, "ь", "ь")
+        str = string.gsub(str, "э", "э")
+        str = string.gsub(str, "ю", "ю")
+        str = string.gsub(str, "я", "я")
+        str = string.gsub(str, "А", "Α")
+        str = string.gsub(str, "Б", "Δ")
+        str = string.gsub(str, "В", "Β")
+        str = string.gsub(str, "Г", "Г")
+        str = string.gsub(str, "Д", "Д")
+        str = string.gsub(str, "Е", "Ε")
+        str = string.gsub(str, "Ё", "Έ")
+        str = string.gsub(str, "Ж", "Ж")
+        str = string.gsub(str, "З", "Ζ")
+        str = string.gsub(str, "И", "Υ")
+        str = string.gsub(str, "Й", "Ϋ")
+        str = string.gsub(str, "К", "Κ")
+        str = string.gsub(str, "Л", "Λ")
+        str = string.gsub(str, "М", "M")
+        str = string.gsub(str, "Н", "Η")
+        str = string.gsub(str, "О", "Ο")
+        str = string.gsub(str, "П", "Π")
+        str = string.gsub(str, "Р", "Ρ")
+        str = string.gsub(str, "С", "Σ")
+        str = string.gsub(str, "Т", "Τ")
+        str = string.gsub(str, "У", "Γ")
+        str = string.gsub(str, "Ф", "Φ")
+        str = string.gsub(str, "Х", "Χ")
+        str = string.gsub(str, "Ц", "Ц")
+        str = string.gsub(str, "Ч", "Ч")
+        str = string.gsub(str, "Ш", "Ω")
+        str = string.gsub(str, "Щ", "Ώ")
+        str = string.gsub(str, "Ъ", "Ъ")
+        str = string.gsub(str, "Ы", "Ы")
+        str = string.gsub(str, "Ь", "Ь")
+        str = string.gsub(str, "Э", "Э")
+        str = string.gsub(str, "Ю", "Ю")
+        str = string.gsub(str, "Я", "Я")
+        return str
+    end)
     
-    for rus, kaz in pairs(kazakhMap) do
-        str = string.gsub(str, rus, kaz)
+    if not success then
+        showNotification("Ошибка 4: Ошибка обхода фильтрации", errorColor, true)
+        return str
     end
-    return str
+    
+    return result
 end
 
--- Текущая функция обхода (по умолчанию V1)
+-- Новая функция замены на казахстанские символы
+local function kazakhReplace(str)
+    local success, result = pcall(function()
+        local kazakhMap = {
+            ["а"] = "ә", ["А"] = "Ә",
+            ["б"] = "б", ["Б"] = "Б",
+            ["в"] = "в", ["В"] = "В",
+            ["г"] = "ғ", ["Г"] = "Ғ",
+            ["д"] = "д", ["Д"] = "Д",
+            ["е"] = "е", ["Е"] = "Е",
+            ["ё"] = "ё", ["Ё"] = "Ё",
+            ["ж"] = "ж", ["Ж"] = "Ж",
+            ["з"] = "з", ["З"] = "З",
+            ["и"] = "і", ["И"] = "І",
+            ["й"] = "й", ["Й"] = "Й",
+            ["к"] = "қ", ["К"] = "Қ",
+            ["л"] = "л", ["Л"] = "Л",
+            ["м"] = "м", ["М"] = "М",
+            ["н"] = "ң", ["Н"] = "Ң",
+            ["о"] = "ө", ["О"] = "Ө",
+            ["п"] = "п", ["П"] = "П",
+            ["р"] = "р", ["Р"] = "Р",
+            ["с"] = "с", ["С"] = "С",
+            ["т"] = "т", ["Т"] = "Т",
+            ["у"] = "ү", ["У"] = "Ү",
+            ["ф"] = "ф", ["Ф"] = "Ф",
+            ["х"] = "һ", ["Х"] = "Һ",
+            ["ц"] = "ц", ["Ц"] = "Ц",
+            ["ч"] = "ч", ["Ч"] = "Ч",
+            ["ш"] = "ш", ["Ш"] = "Ш",
+            ["щ"] = "щ", ["Щ"] = "Щ",
+            ["ъ"] = "ъ", ["Ъ"] = "Ъ",
+            ["ы"] = "ы", ["Ы"] = "Ы",
+            ["ь"] = "ь", ["Ь"] = "Ь",
+            ["э"] = "э", ["Э"] = "Э",
+            ["ю"] = "ю", ["Ю"] = "Ю",
+            ["я"] = "я", ["Я"] = "Я"
+        }
+        
+        for russian, kazakh in pairs(kazakhMap) do
+            str = string.gsub(str, russian, kazakh)
+        end
+        return str
+    end)
+    
+    if not success then
+        showNotification("Ошибка 4: Ошибка обхода фильтрации", errorColor, true)
+        return str
+    end
+    
+    return result
+end
+
+-- Текущая функция обхода
 local currentBypassFunction = bypassFilter
 
 -- Функция отправки сообщения
 local function sendChatMessage(message)
-    if TextChatService and TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
-        local success, err = pcall(function()
+    local success, err = pcall(function()
+        if TextChatService and TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
             TextChatService.TextChannels.RBXGeneral:SendAsync(message)
-        end)
-        if success then
             return true
         end
+        return false
+    end)
+    
+    if not success then
+        showNotification("Ошибка 2: Ошибка отправки сообщения в чат", errorColor, true)
+        return false
     end
-    return false
+    
+    return true
 end
 
 -- Обработчик нажатия кнопки отправки
@@ -496,9 +559,11 @@ SendButton.MouseButton1Click:Connect(function()
     if message ~= "" then
         local bypassedMessage = currentBypassFunction(message)
         local success = sendChatMessage(bypassedMessage)
+        if not success then
+            showNotification("Ошибка 2: Ошибка отправки сообщения в чат", errorColor, true)
+        end
     else
-        -- Показываем ошибку, если поле пустое
-        showNotification("Ошибка 1: Пустое текстовое поле", errorColor)
+        showNotification("Ошибка 1: Пустое текстовое поле", errorColor, true)
     end
 end)
 
@@ -519,14 +584,15 @@ setupButtonHover(SettingsButton, Color3.fromRGB(100, 100, 110), Color3.fromRGB(8
 setupButtonHover(V1Button, hoverColor, accentColor)
 setupButtonHover(V2Button, hoverColor, accentColor)
 setupButtonHover(V3Button, hoverColor, accentColor)
+setupButtonHover(BackButton, Color3.fromRGB(255, 200, 0), minimizeColor)
 
 -- Анимация для плавающего круга
 setupButtonHover(FloatingCircle, hoverColor, accentColor)
 
 -- Кнопка закрытия
 CloseButton.MouseButton1Click:Connect(function()
-    ScreenGui:Destroy()  -- Сначала закрываем меню
-    showNotification("Меню закрыто полностью")  -- Затем показываем уведомление
+    ScreenGui:Destroy()
+    showNotification("Menu closed")
 end)
 
 -- Переменные для двойного нажатия
@@ -541,7 +607,7 @@ MinimizeButton.MouseButton1Click:Connect(function()
     showNotification("Нажмите два раза на круг для открытия меню")
 end)
 
--- Обработчик для плавающего круга (двойное нажатие)
+-- Обработчик для плавающего круга
 FloatingCircle.MouseButton1Click:Connect(function()
     local currentTime = tick()
     if currentTime - lastClickTime < 0.5 then
@@ -557,14 +623,14 @@ FloatingCircle.MouseButton1Click:Connect(function()
     lastClickTime = currentTime
 end)
 
--- Добавляем обработку нажатия Enter в текстовом поле
+-- Обработка нажатия Enter
 InputBox.FocusLost:Connect(function(enterPressed)
     if enterPressed then
         SendButton.MouseButton1Click:Fire()
     end
 end)
 
--- Добавляем возможность открытия/закрытия GUI горячей клавишей
+-- Горячая клавиша для GUI
 local guiVisible = true
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
@@ -580,26 +646,94 @@ SettingsButton.MouseButton1Click:Connect(function()
     SettingsFrame.Visible = true
 end)
 
--- Обработчик кнопки V1
-V1Button.MouseButton1Click:Connect(function()
-    currentBypassFunction = bypassFilter
-    CreatorText.Visible = false
+-- Обработчик кнопки возврата
+BackButton.MouseButton1Click:Connect(function()
     SettingsFrame.Visible = false
     MainFrame.Visible = true
+end)
+
+-- Обработчик кнопки V1
+V1Button.MouseButton1Click:Connect(function()
+    local success, err = pcall(function()
+        currentBypassFunction = bypassFilter
+        CreatorText.Visible = false
+        SettingsFrame.Visible = false
+        MainFrame.Visible = true
+    end)
+    
+    if not success then
+        showNotification("Ошибка 3: Ошибка выбора версии", errorColor, true)
+    end
 end)
 
 -- Обработчик кнопки V2
 V2Button.MouseButton1Click:Connect(function()
-    currentBypassFunction = replaceLetters
-    CreatorText.Visible = true
-    SettingsFrame.Visible = false
-    MainFrame.Visible = true
+    local success, err = pcall(function()
+        currentBypassFunction = replaceLetters
+        CreatorText.Visible = true
+        SettingsFrame.Visible = false
+        MainFrame.Visible = true
+    end)
+    
+    if not success then
+        showNotification("Ошибка 3: Ошибка выбора версии", errorColor, true)
+    end
 end)
 
 -- Обработчик кнопки V3
 V3Button.MouseButton1Click:Connect(function()
-    currentBypassFunction = kazakhReplace
-    CreatorText.Visible = false  -- Убираем надпись создателя для V3
-    SettingsFrame.Visible = false
-    MainFrame.Visible = true
+    local success, err = pcall(function()
+        currentBypassFunction = kazakhReplace
+        CreatorText.Visible = false
+        SettingsFrame.Visible = false
+        MainFrame.Visible = true
+    end)
+    
+    if not success then
+        showNotification("Ошибка 3: Ошибка выбора версии", errorColor, true)
+    end
+end)
+
+-- Исправление проблемы с открытием меню
+-- Добавляем ZIndex для правильного отображения элементов
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+MainFrame.ZIndex = 10
+FloatingCircle.ZIndex = 11
+SettingsFrame.ZIndex = 12
+Notification.ZIndex = 13
+
+-- Исправляем проблему с отображением круга
+FloatingCircle.MouseButton1Click:Connect(function()
+    local currentTime = tick()
+    if currentTime - lastClickTime < 0.5 then
+        clickCount = clickCount + 1
+        if clickCount >= 2 then
+            MainFrame.Visible = true
+            FloatingCircle.Visible = false
+            clickCount = 0
+            -- Показываем уведомление об открытии меню
+            showNotification("Меню открыто")
+        end
+    else
+        clickCount = 1
+    end
+    lastClickTime = currentTime
+end)
+
+-- Убедимся, что круг можно перемещать
+FloatingCircle.Draggable = true
+
+-- Добавляем обработчик для открытия меню по правому шифту
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.RightShift then
+        if not MainFrame.Visible then
+            MainFrame.Visible = true
+            FloatingCircle.Visible = false
+        else
+            MainFrame.Visible = false
+            FloatingCircle.Visible = true
+            FloatingCircle.Position = UDim2.new(0, mouse.X - 20, 0, mouse.Y - 20)
+        end
+    end
 end)
